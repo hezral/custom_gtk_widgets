@@ -25,6 +25,8 @@ from gi.repository import Gtk, GObject, Gdk
 class ModeSwitch(Gtk.Grid):
     '''Gtk only basic port of https://github.com/elementary/granite/blob/master/lib/Widgets/ModeSwitch.vala'''
 
+    __gtype_name__ = "ModeSwitch"
+
     CSS = ".modeswitch slider {min-height: 16px; min-width: 16px;}"
     active = GObject.Property(type=bool, default=True)
     

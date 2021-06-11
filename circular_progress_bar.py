@@ -27,8 +27,14 @@ import math
 
 class CircularProgressBar(Gtk.Bin):
     '''Python port of https://github.com/phastmike/vala-circular-progress-bar'''
+
+    __gtype_name__ = "CircularProgressBar"
+
     MIN_D = 80
-    font = "Inter"
+    _font_percentage = Pango.FontDescription.from_string("Inter 24")
+    _font_unit = Pango.FontDescription.from_string("Inter 8")
+    _font_color = "#000000"
+    
     line_cap = cairo.LineCap.BUTT
 
     _line_width = 1
@@ -37,9 +43,9 @@ class CircularProgressBar(Gtk.Bin):
     _radius_fill_color = "#d3d3d3"
     _progress_fill_color = "#4a90d9"
 
+    show_unit = GObject.Property(type=bool, default=True)
     center_filled = GObject.Property(type=bool, default=False)
     radius_filled = GObject.Property(type=bool, default=False)
-    font = GObject.Property(type=str, default="Inter")
     line_cap = GObject.Property(type=cairo.LineCap, default=cairo.LineCap.BUTT)
 
     def __init__(self, *args, **kwargs):
@@ -49,14 +55,43 @@ class CircularProgressBar(Gtk.Bin):
         drawing_area.set_size_request(300, 300)
         drawing_area.props.expand = True
         drawing_area.props.halign = self.props.valign = Gtk.Align.FILL
-
         drawing_area.connect("draw", self.draw)
-        self.connect("notify", self.on_notify)
 
+        self.connect("notify", self.on_notify)
         self.add(drawing_area)
+        self.props.name = "circular-progress-bar"
 
     def on_notify(self, *args):
         self.queue_draw()
+
+    @GObject.Property(type=Pango.FontDescription)
+    def font_percentage(self):
+        '''Font'''
+        return self._font_percentage
+
+    @font_percentage.setter
+    def font_percentage(self, value):
+        self._font_percentage = value
+
+    @GObject.Property(type=Pango.FontDescription)
+    def font_unit(self):
+        '''Font'''
+        return self._font_unit
+
+    @font_unit.setter
+    def font_unit(self, value):
+        self._font_unit = value
+
+    @GObject.Property(type=str)
+    def font_color(self):
+        '''Font color (Check Gdk.RGBA parse method)'''
+        return self._font_color
+
+    @font_color.setter
+    def font_color(self, value):
+        color = Gdk.RGBA()
+        if color.parse(value):
+            self._font_color = value
 
     @GObject.Property(type=str)
     def center_fill_color(self):
@@ -197,26 +232,27 @@ class CircularProgressBar(Gtk.Bin):
         context.save()
         context.add_class(Gtk.STYLE_CLASS_TROUGH)
         color = context.get_color(context.get_state())
+        # color.parse(self._font_color)
         Gdk.cairo_set_source_rgba(cr, color)
 
         # Percentage
         layout = PangoCairo.create_layout(cr)
         layout.set_text("{0}".format(int(self.percentage * 100.0)), -1)
-        desc = Pango.FontDescription.from_string(self.font + " 24")
-        layout.set_font_description(desc)
-        PangoCairo.update_layout(cr, layout)
-        w, h = layout.get_size() 
-        cr.move_to(center_x - ((w / Pango.SCALE) / 2), center_y - 27 )
-        PangoCairo.show_layout(cr, layout)
-
-        # Units indicator ('PERCENT')
-        layout.set_text("PERCENT", -1)
-        desc = Pango.FontDescription.from_string(self.font + " 8")
-        layout.set_font_description(desc)
+        layout.set_font_description(self.font_percentage)
         PangoCairo.update_layout(cr, layout)
         w, h = layout.get_size()
-        cr.move_to(center_x - ((w / Pango.SCALE) / 2), center_y + 13)
+        # cr.move_to(center_x - ((w / Pango.SCALE) / 2), center_y - 27 )
+        cr.move_to(center_x - ((w / Pango.SCALE) / 2), center_y - (int(self.font_percentage.get_size() / Pango.SCALE)+3))
         PangoCairo.show_layout(cr, layout)
+
+        if self.show_unit:
+            # Units indicator ('PERCENT')
+            layout.set_text("PERCENT", -1)
+            layout.set_font_description(self.font_unit)
+            PangoCairo.update_layout(cr, layout)
+            w, h = layout.get_size()
+            cr.move_to(center_x - ((w / Pango.SCALE) / 2), center_y + (int(self.font_unit.get_size() / Pango.SCALE)+5))
+            PangoCairo.show_layout(cr, layout)
 
         context.restore()
         cr.restore()

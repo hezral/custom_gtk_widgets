@@ -20,7 +20,7 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
-from gi.repository import Gtk, GObject, Gdk, cairo, Gio, GLib
+from gi.repository import Gtk, GObject, Gdk, cairo
 
 from circular_progress_bar import CircularProgressBar
 from granite_mode_switch import ModeSwitch
@@ -56,6 +56,11 @@ class Demo(Gtk.ApplicationWindow):
 
         self.s_progr.connect("value-changed", self.on_value_changed)
         self.s_linew.connect("value-changed", self.on_value_changed)
+
+        self.fontbutton1.connect("font-set", self.on_font_set)
+        self.fontbutton2.connect("font-set", self.on_font_set)
+
+        
 
         main_grid = Gtk.Grid()
         main_grid.props.expand = True
@@ -273,17 +278,52 @@ class Demo(Gtk.ApplicationWindow):
 
         grid.attach(box2, 0, 3, 2, 1)
 
-        self.fontbutton = Gtk.FontButton().new_with_font("Inter")
-        self.fontbutton.props.name = "fontbutton"
-        self.fontbutton.props.hexpand = True
-        self.fontbutton.props.show_size = True
-        self.fontbutton.props.show_style = True
-        self.fontbutton.props.use_font = True
-        self.fontbutton.props.use_size = True
+        box3 = Gtk.Grid()
+        box3.props.hexpand = True
+        box3.props.visible = True
+        box3.props.can_focus = False
+        box3.props.halign = Gtk.Align.FILL
+        box3.props.row_spacing = 6
+        box3.props.column_spacing = 6
 
-        grid.attach(self.fontbutton, 0, 4, 2, 1)
+        label4 = Gtk.Label()
+        label4.props.hexpand = False
+        label4.props.halign = Gtk.Align.START
+        label4.props.label = "Progress"
+        box3.attach(label4, 0, 0, 1, 1)
+
+        self.fontbutton1 = Gtk.FontButton().new_with_font("Inter")
+        self.fontbutton1.props.name = "font_percentage"
+        self.fontbutton1.props.hexpand = True
+        self.fontbutton1.props.show_size = True
+        self.fontbutton1.props.show_style = True
+        self.fontbutton1.props.use_font = True
+        # self.fontbutton1.props.use_size = True
+        self.fontbutton1.set_font("Inter 24")
+        box3.attach(self.fontbutton1, 1, 0, 1, 1)
+
+        label5 = Gtk.Label()
+        label5.props.hexpand = False
+        label5.props.halign = Gtk.Align.START
+        label5.props.label = "Unit"
+        box3.attach(label5, 0, 1, 1, 1)
+
+        self.fontbutton2 = Gtk.FontButton().new_with_font("Inter")
+        self.fontbutton2.props.name = "font_unit"
+        self.fontbutton2.props.hexpand = True
+        self.fontbutton2.props.show_size = True
+        self.fontbutton2.props.show_style = True
+        self.fontbutton2.props.use_font = True
+        # self.fontbutton2.props.use_size = True
+        self.fontbutton2.set_font("Inter 8")
+        box3.attach(self.fontbutton2, 1, 1, 1, 1)
+
+        grid.attach(box3, 0, 4, 2, 1)
 
         return grid
+
+    def on_font_set(self, fontbutton):
+        self.circularprogressbar.set_property(fontbutton.props.name, fontbutton.props.font_desc)
 
     def on_color_set(self, colorbutton):
         c = colorbutton.get_rgba()
